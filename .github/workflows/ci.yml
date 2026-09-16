@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: |
+          if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile; else echo "no lockfile yet — skipping"; fi
+      - name: Lint, typecheck, test
+        run: |
+          if [ -f package.json ]; then pnpm -r lint && pnpm -r typecheck && pnpm -r test; else echo "no packages yet — skipping"; fi
