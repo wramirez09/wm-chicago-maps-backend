@@ -1,0 +1,23 @@
+app = "chicago-valhalla"
+primary_region = "ord"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[mounts]
+  source = "valhalla_data"
+  destination = "/custom_files"
+  initial_size = "5gb"
+
+# Private only (Flycast: http://chicago-valhalla.flycast).
+#   flyctl ips allocate-v6 --private --app chicago-valhalla
+[[services]]
+  internal_port = 8002
+  protocol = "tcp"
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  size = "shared-cpu-2x"
+  memory = "2gb"

@@ -8,18 +8,42 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    services:
+      postgis:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: chicago
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d chicago"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/chicago
+      DATABASE_URL_DIRECT: postgres://postgres:postgres@localhost:5432/chicago
+      JWT_SECRET: ci-only-secret-ci-only-secret-ci-only-secret
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
-      - name: Install
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r build
+      - run: pnpm -r lint
+      - run: pnpm -r typecheck
+      - name: Apply migrations against PostGIS
+        run: pnpm --filter @wm/api migrate
+      - run: pnpm -r test
+      - name: Boot the API and hit /v1/ready
         run: |
-          if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile; else echo "no lockfile yet — skipping"; fi
-      - name: Lint, typecheck, test
-        run: |
-          if [ -f package.json ]; then pnpm -r lint && pnpm -r typecheck && pnpm -r test; else echo "no packages yet — skipping"; fi
+          (pnpm --filter @wm/api start &) 
+          for i in $(seq 1 20); do
+            if curl -fsS http://localhost:3000/v1/ready; then echo; exit 0; fi
+            sleep 1
+          done
+          echo "API did not become ready"; exit 1

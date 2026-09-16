@@ -1,0 +1,31 @@
+# Local stack: `docker compose -f infra/docker-compose.yml up`
+# API and worker run on the host with `pnpm dev` / `pnpm --filter @wm/api dev:worker`
+# against these services. Photon and Valhalla need one-time data builds — see fly/build-data.md.
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: chicago
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d chicago"]
+      interval: 5s
+      retries: 10
+
+  photon:
+    build: ./fly/chicago-photon
+    ports: ["2322:2322"]
+    volumes: ["./data/photon:/photon/photon_data"]
+    profiles: ["geo"]
+
+  valhalla:
+    build: ./fly/chicago-valhalla
+    ports: ["8002:8002"]
+    volumes: ["./data/valhalla:/custom_files"]
+    profiles: ["geo"]
+
+volumes:
+  pgdata:

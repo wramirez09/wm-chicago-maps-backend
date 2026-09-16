@@ -1,7 +1,9 @@
 ---
-description: Bootstrap the Node + TypeScript backend for the Chicago local-map app — Fastify API, Drizzle/PostGIS, pg-boss jobs, monorepo
-argument-hint: [none]
+description: (Historical) The spec this backend was scaffolded from. The code is the source of truth now; keep for context.
 ---
+
+> Superseded by the implementation. Differences from this spec: no Supabase (Fly Postgres + our own JWT auth), no apps/mobile in this repo, migrations run via a bundled `dist/migrate.js`.
+
 
 Create the backend for the Chicago local-map app as a pnpm + Turborepo monorepo. If `apps/mobile` (from /init-chicago-map) already exists at the repo root, move it into the monorepo without changing its contents.
 

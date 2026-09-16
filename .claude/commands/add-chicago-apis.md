@@ -3,7 +3,7 @@ description: Add upstream API integrations to the Chicago local-map backend (cit
 argument-hint: [group: all | places | neighborhoods | transit | events | plumbing]
 ---
 
-Add upstream integrations for group: $ARGUMENTS (default: all) to this monorepo (created by /init-chicago-api and /init-chicago-map).
+Add upstream integrations for group: $ARGUMENTS (default: all) to this backend monorepo. Already implemented: Socrata (areas, licenses, owners), Overpass (layers), CTA train/bus, Divvy, Valhalla, Photon, Ticketmaster. Add what is missing for the group and extend existing clients rather than duplicating them.
 
 ## Ground rules
 
@@ -12,8 +12,8 @@ Add upstream integrations for group: $ARGUMENTS (default: all) to this monorepo 
 - Request/response shapes are zod schemas in `packages/shared/src/<group>.ts`; the API validates upstream responses against them at the boundary so a silent upstream change fails loudly.
 - Bulk ingest goes in `apps/api/src/jobs/ingest/<service>.ts` as a `pg-boss` handler with a cron schedule; expose `pnpm --filter api job:run <name>` for manual runs.
 - Every new env var goes in `apps/api/.env.example` with a one-line comment on where to get the key.
-- For each `/v1` route touched, add or update the TanStack Query hook in `apps/mobile/src/lib/api/<group>/hooks.ts` using the shared schema types. `staleTime`: static datasets 24h, live arrivals 30s, GBFS 60s, weather 10m.
-- Tests: Vitest in `apps/api` with recorded fixtures in `src/upstream/__fixtures__/`; mock `fetch`, never hit the network. Jest in `apps/mobile` for hooks.
+- The mobile app is a separate repo; only update `packages/shared` schemas here. Note in the PR which hooks the app needs.
+- Tests: Vitest in `apps/api` with recorded fixtures in `src/upstream/__fixtures__/`; mock `fetch`, never hit the network.
 - Do not invent endpoints. If unsure of a URL, parameter, or field name, look up the current docs first and cite the doc URL in a comment at the top of the file.
 
 ## Services by group
