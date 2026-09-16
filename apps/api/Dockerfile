@@ -11,7 +11,8 @@ COPY apps/api ./apps/api
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 RUN pnpm --filter @wm/shared build && pnpm --filter @wm/db build && pnpm --filter @wm/api build
 # Minimal production node_modules for the api only.
-RUN pnpm --filter @wm/api --prod deploy /out
+# --legacy: pnpm 10 otherwise requires inject-workspace-packages for deploy.
+RUN pnpm --filter @wm/api --prod deploy --legacy /out
 
 FROM node:22-slim AS runtime
 ENV NODE_ENV=production

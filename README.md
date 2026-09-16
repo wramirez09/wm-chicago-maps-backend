@@ -30,6 +30,18 @@ fly.toml                  the API's Fly app (web + worker process groups)
 
 ## Run locally
 
+Everything in containers (PostGIS → migrations → API on :3000 → worker):
+
+```sh
+docker compose -f infra/docker-compose.yml up --build
+open http://localhost:3000/docs
+docker compose -f infra/docker-compose.yml exec api node -e "console.log('api up')"
+```
+
+Upstream keys go in `apps/api/.env` (copied from `.env.example`); compose reads it if present. The API image is the same one Fly deploys (`apps/api/Dockerfile`).
+
+Hot-reloading dev loop (db in a container, Node on the host):
+
 ```sh
 pnpm install
 docker compose -f infra/docker-compose.yml up -d db
