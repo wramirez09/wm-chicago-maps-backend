@@ -2,7 +2,11 @@
 
 Backend for [wm-chicago-maps](https://github.com/wramirez09/wm-chicago-maps): a Chicago-only map of independently owned places. Locally owned, locally operated.
 
-Node 22 · TypeScript · Fastify 5 · Drizzle + PostGIS · pg-boss · Fly.io (`ord`)
+Node 22 · TypeScript · Fastify 5 · Drizzle + PostGIS · pg-boss · Docker · Fly.io (`ord`)
+
+The backend is containerized end to end: one image (`apps/api/Dockerfile`) is what you
+run locally under Compose, what CI builds, and what Fly deploys. Node, pnpm and the
+migrations are pinned inside it, so the host only needs Docker.
 
 ## What it does
 
@@ -23,42 +27,72 @@ apps/api/                 Fastify service: routes, plugins, jobs, upstream clien
 packages/shared/          zod schemas + types — the API contract the mobile app imports
 packages/db/              Drizzle schema, PostGIS helpers, migrations
 packages/config/          tsconfig / eslint
-infra/docker-compose.yml  local PostGIS (+ optional Photon/Valhalla)
+apps/api/Dockerfile       the one image: api, worker, migrations, seed, job runner
+infra/docker-compose.yml  the whole stack locally (+ optional Photon/Valhalla)
 infra/fly/                Photon and Valhalla Fly apps, data build guide
 fly.toml                  the API's Fly app (web + worker process groups)
 ```
 
 ## Run locally
 
-Everything in containers (PostGIS → migrations → API on :3000 → worker):
+Docker is the only prerequisite. Compose brings up the whole backend — PostGIS →
+migrations → API on :3000 → worker — from the same image Fly runs:
 
 ```sh
+cp apps/api/.env.example apps/api/.env       # optional; upstream keys only
 docker compose -f infra/docker-compose.yml up --build
 open http://localhost:3000/docs
-docker compose -f infra/docker-compose.yml exec api node -e "console.log('api up')"
 ```
 
-Upstream keys go in `apps/api/.env` (copied from `.env.example`); compose reads it if present. The API image is the same one Fly deploys (`apps/api/Dockerfile`).
+Compose reads `apps/api/.env` if it exists; `DATABASE_URL`, `JWT_SECRET` and the
+geo URLs already have working local defaults in `infra/docker-compose.yml`, so
+the file is only needed for upstream keys.
 
-Hot-reloading dev loop (db in a container, Node on the host):
+Seed and backfill by running one-off containers against the same image — no
+host Node, no host build:
+
+```sh
+C="docker compose -f infra/docker-compose.yml"
+$C run --rm api node dist/seed.js                       # 8 landmark places
+$C run --rm api node dist/jobs/run.js ingest.areas      # 77 community areas
+$C run --rm api node dist/jobs/run.js ingest.layers '{"only":["transit-lines","transit-stations"]}'
+```
+
+`scripts/load-data.command` does the seed + areas + layers sequence in one go
+(double-click it in Finder).
+
+Everyday container commands:
+
+```sh
+$C ps                       # what's up
+$C logs -f api worker       # tail both
+$C exec api sh              # shell in the running api
+$C run --rm migrate         # re-apply migrations
+$C down                     # stop;  add -v to drop the pgdata volume too
+$C --profile geo up photon valhalla   # self-hosted geo, after infra/fly/build-data.md
+```
+
+### Hot-reloading (optional)
+
+Only if you want `tsx watch` on file save. This is the one path that needs Node
+on the host, and it must be Node 22 to match the image (`.nvmrc`):
 
 ```sh
 pnpm install
-docker compose -f infra/docker-compose.yml up -d db
-cp apps/api/.env.example apps/api/.env       # DATABASE_URL points at the compose db by default
-pnpm -r build                                # shared + db must be built once for the api to resolve them
-pnpm --filter @wm/api migrate                # applies packages/db/drizzle
-pnpm --filter @wm/api seed                   # 8 landmark places
-pnpm dev                                     # http://localhost:3000/docs
-pnpm --filter @wm/api dev:worker             # job worker, in a second terminal
+docker compose -f infra/docker-compose.yml up -d db   # just PostGIS
+cp apps/api/.env.example apps/api/.env                # DATABASE_URL points at the compose db
+pnpm -r build                                         # shared + db must be built once
+pnpm --filter @wm/api migrate
+pnpm --filter @wm/api seed
+pnpm dev                                              # http://localhost:3000/docs
+pnpm --filter @wm/api dev:worker                      # second terminal
 ```
 
-Run one job inline without the queue:
-
-```sh
-pnpm --filter @wm/api job:run ingest.areas
-pnpm --filter @wm/api job:run ingest.layers '{"only":["transit-lines","transit-stations"]}'
-```
+Host `pnpm` scripts run TypeScript through `tsx`; their in-container twins run
+the compiled `dist/` build. Both are listed in `apps/api/package.json`. Anything
+that must be runnable in production needs an entry in `apps/api/tsup.config.ts`
+— the image ships `dist/` and production dependencies only, with no `tsx` and no
+`src/`.
 
 ## Overlay layers
 
@@ -90,16 +124,37 @@ Checks: `pnpm -r typecheck && pnpm -r lint && pnpm -r test`. The integration tes
 
 ## Schema changes
 
-Edit `packages/db/src/schema/`, then `pnpm db:generate`. Read `packages/db/drizzle/README.md` — two hand edits are needed after every generate because drizzle-kit does not understand PostGIS types. Migrations run automatically on Fly via `release_command`.
+Edit `packages/db/src/schema/`, then `pnpm db:generate`. Read `packages/db/drizzle/README.md` — two hand edits are needed after every generate because drizzle-kit does not understand PostGIS types.
+
+Migrations are baked into the image (`/app/drizzle`) and applied by `node dist/migrate.js`: the `migrate` service on `docker compose up` locally, and Fly's `release_command` in production. A migration that fails in the release machine aborts the deploy.
 
 ## Deploy (Fly.io, region `ord`)
 
-First time only:
+Fly builds `apps/api/Dockerfile` and runs the resulting image as two process
+groups from one `fly.toml`: `web` (`node dist/index.js`, behind the health check
+on `/v1/ready`) and `worker` (`node dist/worker.js`). Migrations are not a
+deploy step you run — `release_command = "node dist/migrate.js"` runs them in a
+release machine built from the same image, and a failure there aborts the
+rollout before any traffic shifts.
+
+### Preflight
+
+Verify the artifact locally before touching Fly — this is the exact image Fly
+will run:
+
+```sh
+pnpm -r typecheck && pnpm -r lint && pnpm -r test
+docker build -f apps/api/Dockerfile -t chicago-api:preflight .
+docker run --rm --entrypoint ls chicago-api:preflight -R /app/dist   # index, worker, migrate, seed, jobs/run
+docker compose -f infra/docker-compose.yml up --build                # full stack, /v1/ready green
+```
+
+### First time only
 
 ```sh
 flyctl apps create chicago-api
-flyctl postgres create --name chicago-db --region ord        # Fly Postgres; enable PostGIS is automatic on first migrate
-flyctl postgres attach chicago-db --app chicago-api         # sets DATABASE_URL
+flyctl postgres create --name chicago-db --region ord        # unmanaged Fly Postgres; PostGIS is available
+flyctl postgres attach chicago-db --app chicago-api          # sets DATABASE_URL
 flyctl secrets set --app chicago-api JWT_SECRET=$(openssl rand -base64 48) APPLE_BUNDLE_ID=... GOOGLE_CLIENT_IDS=... \
   CTA_TRAIN_KEY=... CTA_BUS_KEY=... TICKETMASTER_KEY=... SOCRATA_APP_TOKEN=...
 # Geo services (private, reached over Flycast):
@@ -112,9 +167,39 @@ flyctl ips allocate-v6 --private --app chicago-valhalla
 
 Then build the Photon index and Valhalla tiles once per `infra/fly/build-data.md`.
 
-Every push to `main` that touches `apps/api`, `packages`, `fly.toml` or the lockfile deploys the API via GitHub Actions (`FLY_API_TOKEN` repo secret). Manual: `pnpm fly:deploy`.
+**Postgres flavour matters.** Unmanaged `fly postgres` ships with PostGIS
+available and the first migration runs `CREATE EXTENSION postgis` itself. Fly
+Managed Postgres does not let the app create extensions — enable `postgis` and
+`pg_trgm` from its dashboard *before* the first deploy, or the release command
+fails and the deploy rolls back.
 
-`fly postgres` (unmanaged) ships with PostGIS available; the first migration runs `CREATE EXTENSION postgis`. If you choose Fly Managed Postgres instead, enable the `postgis` and `pg_trgm` extensions in its dashboard before the first deploy.
+`JWT_SECRET` must be at least 32 characters or the process exits at boot
+(`apps/api/src/env.ts` parses the environment once and hard-fails). Set every
+secret before the first deploy, since the release machine boots the same code.
+
+### Deploying
+
+Every push to `main` touching `apps/api`, `packages`, `fly.toml` or the lockfile
+deploys via GitHub Actions (`FLY_API_TOKEN` repo secret). Manual:
+
+```sh
+pnpm fly:deploy        # flyctl deploy --remote-only — builds the image on Fly's builder
+pnpm fly:logs
+pnpm fly:ssh
+```
+
+Post-deploy, one-off container tasks run against the deployed image:
+
+```sh
+flyctl ssh console --app chicago-api -C "node /app/dist/seed.js"
+flyctl ssh console --app chicago-api -C "node /app/dist/jobs/run.js ingest.areas"
+flyctl ssh console --app chicago-api -C "node /app/dist/jobs/run.js ingest.layers"
+flyctl status --app chicago-api
+flyctl releases --app chicago-api          # roll back with: flyctl deploy --image <previous>
+```
+
+The worker process group has no public address; scale it independently with
+`flyctl scale count worker=1 --app chicago-api`.
 
 ## Mobile app contract
 

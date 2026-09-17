@@ -1,5 +1,7 @@
 /**
- * Run one job inline, without the queue: `pnpm --filter @wm/api job:run ingest.layers`.
+ * Run one job inline, without the queue.
+ * In a container: `node dist/jobs/run.js ingest.layers`.
+ * On the host: `pnpm --filter @wm/api job:run ingest.layers`.
  * Used for backfills and local development.
  */
 import { createDb } from '@wm/db';

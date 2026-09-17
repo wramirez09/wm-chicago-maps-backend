@@ -47,3 +47,30 @@ jobs:
             sleep 1
           done
           echo "API did not become ready"; exit 1
+
+  # The deploy artifact. Builds the same image fly.toml points at, so a broken
+  # Dockerfile fails on the PR instead of in the middle of a Fly release.
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build the API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: false
+          load: true
+          tags: chicago-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Every production entrypoint is present in dist/
+        run: |
+          for f in index.js worker.js migrate.js seed.js jobs/run.js; do
+            docker run --rm --entrypoint test chicago-api:ci -f "/app/dist/$f" \
+              || { echo "missing /app/dist/$f — add it to apps/api/tsup.config.ts"; exit 1; }
+          done
+          docker run --rm --entrypoint test chicago-api:ci -d /app/drizzle \
+            || { echo "migrations missing from the image"; exit 1; }
+          echo "image entrypoints ok"

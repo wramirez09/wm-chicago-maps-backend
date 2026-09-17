@@ -1,6 +1,7 @@
 /**
  * The hand-written landmark seeds from the mobile repo's src/data/landmarks.ts,
- * now rows in `places` with category=landmark. Run: pnpm --filter @wm/api seed
+ * now rows in `places` with category=landmark.
+ * In a container: `node dist/seed.js`. On the host: `pnpm --filter @wm/api seed`.
  */
 import { createDb, places, pointFrom } from '@wm/db';
 import { loadEnv } from '../env.js';

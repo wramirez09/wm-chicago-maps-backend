@@ -14,7 +14,9 @@
     "test": "vitest run",
     "job:run": "tsx src/jobs/run.ts",
     "seed": "tsx src/seed/landmarks.ts",
-    "migrate": "node dist/migrate.js"
+    "migrate": "node dist/migrate.js",
+    "start:seed": "node dist/seed.js",
+    "start:job": "node dist/jobs/run.js"
   },
   "dependencies": {
     "@fastify/cors": "^11.0.1",
