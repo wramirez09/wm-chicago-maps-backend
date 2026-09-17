@@ -1,0 +1,110 @@
+[
+  {
+    "map_id": "40830",
+    "station_name": "18th",
+    "station_descriptive_name": "18th (Pink Line)",
+    "location": {
+      "latitude": "41.857908",
+      "longitude": "-87.669147"
+    }
+  },
+  {
+    "map_id": "40830",
+    "station_name": "18th",
+    "station_descriptive_name": "18th (Pink Line)",
+    "location": {
+      "latitude": "41.857908",
+      "longitude": "-87.669147"
+    }
+  },
+  {
+    "map_id": "40060",
+    "station_name": "Belmont",
+    "station_descriptive_name": "Belmont (Blue Line)",
+    "location": {
+      "latitude": "41.938132",
+      "longitude": "-87.712359"
+    }
+  },
+  {
+    "map_id": "41320",
+    "station_name": "Belmont",
+    "station_descriptive_name": "Belmont (Red, Brown & Purple lines)",
+    "location": {
+      "latitude": "41.939751",
+      "longitude": "-87.65338"
+    }
+  },
+  {
+    "map_id": "40060",
+    "station_name": "Belmont",
+    "station_descriptive_name": "Belmont (Blue Line)",
+    "location": {
+      "latitude": "41.938132",
+      "longitude": "-87.712359"
+    }
+  },
+  {
+    "map_id": "41320",
+    "station_name": "Belmont",
+    "station_descriptive_name": "Belmont (Red, Brown & Purple lines)",
+    "location": {
+      "latitude": "41.939751",
+      "longitude": "-87.65338"
+    }
+  },
+  {
+    "map_id": "41320",
+    "station_name": "Belmont",
+    "station_descriptive_name": "Belmont (Red, Brown & Purple lines)",
+    "location": {
+      "latitude": "41.939751",
+      "longitude": "-87.65338"
+    }
+  },
+  {
+    "map_id": "41320",
+    "station_name": "Belmont",
+    "station_descriptive_name": "Belmont (Red, Brown & Purple lines)",
+    "location": {
+      "latitude": "41.939751",
+      "longitude": "-87.65338"
+    }
+  },
+  {
+    "map_id": "40940",
+    "station_name": "Halsted",
+    "station_descriptive_name": "Halsted (Green Line)",
+    "location": {
+      "latitude": "41.778943",
+      "longitude": "-87.644244"
+    }
+  },
+  {
+    "map_id": "40940",
+    "station_name": "Halsted",
+    "station_descriptive_name": "Halsted (Green Line)",
+    "location": {
+      "latitude": "41.778943",
+      "longitude": "-87.644244"
+    }
+  },
+  {
+    "map_id": "41130",
+    "station_name": "Halsted",
+    "station_descriptive_name": "Halsted (Orange Line)",
+    "location": {
+      "latitude": "41.84678",
+      "longitude": "-87.648088"
+    }
+  },
+  {
+    "map_id": "41130",
+    "station_name": "Halsted",
+    "station_descriptive_name": "Halsted (Orange Line)",
+    "location": {
+      "latitude": "41.84678",
+      "longitude": "-87.648088"
+    }
+  }
+]

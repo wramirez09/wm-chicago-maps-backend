@@ -10,5 +10,8 @@ export const submissionStatusEnum = pgEnum('submission_status', ['pending', 'app
 export const claimStatusEnum = pgEnum('claim_status', ['pending', 'approved', 'rejected']);
 export const eventSourceEnum = pgEnum('event_source', ['owner', 'park_district', 'ticketmaster', 'bandsintown', 'community']);
 export const areaChangeKindEnum = pgEnum('area_change_kind', ['opened', 'closed', 'ownership_changed', 'license_renewed']);
-export const layerKeyEnum = pgEnum('layer_key', ['expressways', 'arterials', 'transit-lines', 'transit-stations']);
+export const layerKeyEnum = pgEnum('layer_key', [
+  'expressways', 'arterials', 'transit-lines', 'transit-stations',
+  'bus-routes', 'bus-stops', 'metra-lines', 'metra-stations',
+]);
 export const authProviderEnum = pgEnum('auth_provider', ['apple', 'google']);

@@ -40,3 +40,8 @@ export function metersToSegment(point: Coord, a: Coord, b: Coord): number {
   const t = Math.max(0, Math.min(1, -(px * dx + py * dy) / (dx * dx + dy * dy)));
   return Math.hypot(px + t * dx, py + t * dy);
 }
+
+/** Metres between two points, same local projection as `metersToSegment`. */
+export function metersBetween(a: Coord, b: Coord): number {
+  return metersToSegment(a, b, b);
+}

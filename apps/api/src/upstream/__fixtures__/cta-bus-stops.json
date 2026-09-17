@@ -1,0 +1,70 @@
+[
+    {
+        "the_geom": {
+            "type": "Point",
+            "coordinates": [
+                -87.74750923800002,
+                41.956892084
+            ]
+        },
+        "systemstop": "15189.0",
+        "street": "CICERO",
+        "cross_st": "BERTEAU (north leg)",
+        "dir": "SB",
+        "pos": "FS",
+        "routesstpg": "54,54A",
+        "city": "CHICAGO",
+        "public_nam": "Cicero & Berteau"
+    },
+    {
+        "the_geom": {
+            "type": "Point",
+            "coordinates": [
+                -87.64178572600002,
+                41.67799153599998
+            ]
+        },
+        "systemstop": "14545.0",
+        "street": "HALSTED",
+        "cross_st": "119TH STREET",
+        "dir": "NB",
+        "pos": "FS",
+        "routesstpg": "8A,108",
+        "city": "CHICAGO",
+        "public_nam": "Halsted & 119th Street"
+    },
+    {
+        "the_geom": {
+            "type": "Point",
+            "coordinates": [
+                -87.70896851700002,
+                42.012049691000016
+            ]
+        },
+        "systemstop": "15046.0",
+        "street": "KEDZIE",
+        "cross_st": "TOUHY",
+        "dir": "NB",
+        "pos": "FS",
+        "routesstpg": "11",
+        "city": "CHICAGO",
+        "public_nam": "Kedzie & Touhy"
+    },
+    {
+        "the_geom": {
+            "type": "Point",
+            "coordinates": [
+                -87.66891603599998,
+                41.954186386
+            ]
+        },
+        "systemstop": "6280.0",
+        "street": "ASHLAND",
+        "cross_st": "IRVING PARK",
+        "dir": "NB",
+        "pos": "NS",
+        "routesstpg": "9,X9",
+        "city": "CHICAGO",
+        "public_nam": "Ashland & Irving Park"
+    }
+]

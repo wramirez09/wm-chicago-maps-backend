@@ -1,10 +1,13 @@
 import { and, asGeoJson, desc, eq, layerFeatures, layerRuns } from '@wm/db';
-import { LayerIndex, LayerKey } from '@wm/shared';
+import { LAYER_ATTRIBUTION, LayerIndex, LayerKey } from '@wm/shared';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { cached } from '../../lib/cache.js';
 import { notFound } from '../../lib/errors.js';
+
+/** Layers stored as points; everything else is a LineString. */
+const POINT_LAYERS = new Set<LayerKey>(['transit-stations', 'bus-stops', 'metra-stations']);
 
 /**
  * Map overlays the mobile app used to bundle as ~1 MB of generated TypeScript.
@@ -25,7 +28,7 @@ export async function layersRoutes(app: FastifyInstance) {
           key,
           featureCount: run?.featureCount ?? 0,
           generatedAt: run?.generatedAt.toISOString() ?? null,
-          attribution: run?.attribution ?? '© OpenStreetMap contributors, ODbL',
+          attribution: run?.attribution ?? LAYER_ATTRIBUTION[key],
         };
       }),
     };
@@ -43,7 +46,7 @@ export async function layersRoutes(app: FastifyInstance) {
       if (req.headers['if-none-match'] === etag) return reply.status(304).send(undefined);
 
       const fc = await cached(`layer:${run.id}`, 6 * 3600_000, async () => {
-        const isPoint = req.params.key === 'transit-stations';
+        const isPoint = POINT_LAYERS.has(req.params.key);
         const rows = await app.db
           .select({ properties: layerFeatures.properties, geometry: asGeoJson(isPoint ? layerFeatures.point : layerFeatures.line) })
           .from(layerFeatures)

@@ -60,6 +60,32 @@ pnpm --filter @wm/api job:run ingest.areas
 pnpm --filter @wm/api job:run ingest.layers '{"only":["transit-lines","transit-stations"]}'
 ```
 
+## Overlay layers
+
+`GET /v1/layers` lists them; `GET /v1/layers/:key` serves one as a GeoJSON
+FeatureCollection with an ETag. All eight are written by `ingest.layers`
+(weekly), each as a new run that is flipped to `current` when it is complete.
+
+| Key | Geometry | Properties | Source |
+| --- | --- | --- | --- |
+| `expressways` | LineString | `name`, `ref`, `kind`, `localName` | OSM |
+| `arterials` | LineString | `name`, `kind` | OSM |
+| `transit-lines` | LineString | `line`, `color` | OSM, official CTA colours |
+| `transit-stations` | Point | `name`, `lines`, `stopId` | OSM geometry; `stopId` is the CTA Train Tracker `mapid` joined from the city's ['L'](https://data.cityofchicago.org/d/8pix-ypme) stop list |
+| `bus-routes` | LineString | `route`, `name`, `color` | [CTA - Bus Routes](https://data.cityofchicago.org/d/6uva-a5ei) |
+| `bus-stops` | Point | `name`, `stopId`, `routes` | [CTA_BusStops](https://data.cityofchicago.org/d/qs84-j7wh); `stopId` is the Bus Tracker `stpid` |
+| `metra-lines` | LineString | `line`, `color` | OSM relations, official colours from Metra's GTFS |
+| `metra-stations` | Point | `name`, `stopId`, `lines` | OSM; `stopId` is the Metra GTFS `stop_id` from the `ref:metra` tag |
+
+`stopId` is nullable everywhere it appears, and feeds
+`GET /v1/transit/arrivals?stop=&mode=`. Rail and bus arrivals need
+`CTA_TRAIN_KEY` and `CTA_BUS_KEY`; without them that endpoint returns 502.
+Metra arrivals are not implemented yet and return 400.
+
+`bus-stops` is by far the largest layer — about 10,000 points, roughly 2 MB of
+JSON — and no response compression is configured, so it goes over the wire
+uncompressed. Clients should rely on the ETag and the 24 h `cache-control`.
+
 Checks: `pnpm -r typecheck && pnpm -r lint && pnpm -r test`. The integration tests in `apps/api/src/test/integration.test.ts` run only when `DATABASE_URL` points at a migrated PostGIS database (CI provides one).
 
 ## Schema changes
