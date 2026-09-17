@@ -1,28 +1,27 @@
 import { z } from 'zod';
+import { PointGeometry, feature, featureCollection } from './common.js';
 
 /**
- * Address / place-name search proxied to Photon, bbox-locked to Chicago.
- * Complements the app's local index (streets, stations, landmarks), which
- * cannot resolve street addresses like "1060 W Addison".
+ * Address / place-name search proxied to Photon, restricted to Chicago on the
+ * server (the app sends no bbox). Complements the app's local index of streets,
+ * stations and landmarks, which cannot resolve "3525 S Honore".
  */
 export const GeocodeQuery = z.object({
-  q: z.string().trim().min(2).max(120),
+  q: z.string().trim().min(3).max(120),
   limit: z.coerce.number().int().min(1).max(10).default(5),
 });
+export type GeocodeQuery = z.infer<typeof GeocodeQuery>;
 
-export const GeocodeHit = z.object({
-  id: z.string(),
-  name: z.string(),
-  address: z.string().nullable(),
-  /** e.g. "highway=residential", "amenity=cafe" — OSM key=value */
-  kind: z.string(),
-  lng: z.number(),
-  lat: z.number(),
+export const GeocodeProperties = z.object({
+  /** POI name; null for a plain address. */
+  name: z.string().nullable(),
+  /** Full display line: "<name>, <housenumber street>, <city>" with empty parts skipped. */
+  label: z.string(),
 });
-export type GeocodeHit = z.infer<typeof GeocodeHit>;
+export type GeocodeProperties = z.infer<typeof GeocodeProperties>;
 
-export const GeocodeResults = z.object({
-  q: z.string(),
-  hits: z.array(GeocodeHit),
-  attribution: z.string(),
-});
+export const GeocodeFeature = feature(PointGeometry, GeocodeProperties);
+export type GeocodeFeature = z.infer<typeof GeocodeFeature>;
+
+export const GeocodeCollection = featureCollection(GeocodeFeature);
+export type GeocodeCollection = z.infer<typeof GeocodeCollection>;
