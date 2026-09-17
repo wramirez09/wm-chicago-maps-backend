@@ -7,3 +7,4 @@ export * from './transit.js';
 export * from './route.js';
 export * from './auth.js';
 export * from './mod.js';
+export * from './geocode.js';

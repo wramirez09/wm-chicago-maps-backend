@@ -30,7 +30,8 @@ services:
       DATABASE_URL: postgres://postgres:postgres@db:5432/chicago
       DATABASE_URL_DIRECT: postgres://postgres:postgres@db:5432/chicago
       JWT_SECRET: ${JWT_SECRET:-local-dev-only-secret-local-dev-only-secret}
-      PHOTON_URL: http://photon:2322
+      # Public Photon (fair use, no key) until the self-hosted index is built — see fly/build-data.md.
+      PHOTON_URL: ${PHOTON_URL:-https://photon.komoot.io}
       VALHALLA_URL: http://valhalla:8002
       CORS_ORIGINS: http://localhost:5173
     env_file:

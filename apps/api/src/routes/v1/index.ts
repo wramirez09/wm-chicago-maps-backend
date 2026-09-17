@@ -3,6 +3,7 @@ import type { Env } from '../../env.js';
 import { areasRoutes } from './areas.js';
 import { authRoutes } from './auth.js';
 import { eventsRoutes } from './events.js';
+import { geocodeRoutes } from './geocode.js';
 import { healthRoutes } from './health.js';
 import { layersRoutes } from './layers.js';
 import { meRoutes } from './me.js';
@@ -18,6 +19,7 @@ export async function registerRoutes(app: FastifyInstance, { env }: { env: Env }
   await app.register(authRoutes, opts);
   await app.register(meRoutes);
   await app.register(placesRoutes, opts);
+  await app.register(geocodeRoutes, opts);
   await app.register(areasRoutes);
   await app.register(eventsRoutes);
   await app.register(layersRoutes);

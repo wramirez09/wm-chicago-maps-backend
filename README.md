@@ -6,7 +6,7 @@ Node 22 · TypeScript · Fastify 5 · Drizzle + PostGIS · pg-boss · Fly.io (`o
 
 ## What it does
 
-- Serves the mobile app's `/v1` API: places (bbox search, detail, community submissions, vouches), the 77 community areas and a "what changed" license-diff feed, events, transit arrivals (CTA) and Divvy availability, walking/biking routes (Valhalla), and the map overlay layers the app used to bundle.
+- Serves the mobile app's `/v1` API: places (bbox search, detail, community submissions, vouches), the 77 community areas and a "what changed" license-diff feed, events, transit arrivals (CTA) and Divvy availability, walking/biking routes (Valhalla), address search (Photon), and the map overlay layers the app used to bundle.
 - Owns auth: the app signs in natively with Apple or Google and exchanges the identity token for JWTs issued here. No third-party auth vendor.
 - Runs the ingest jobs: OpenStreetMap overlays (ported from the app's `scripts/fetch-*.mjs`), Chicago Data Portal community areas and business licenses/owners, Ticketmaster events. Plus the moderation autocheck and the weekly digest.
 - Keeps every upstream API key on the server.

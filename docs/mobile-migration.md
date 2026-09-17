@@ -11,6 +11,7 @@ What was reviewed in `wramirez09/wm-chicago-maps` (5 commits, RN 0.87, MapLibre 
 | `src/data/landmarks.ts` | `places` rows (`category=landmark`), `GET /v1/places?bbox=&category=landmark` | `LandmarkOverlay` becomes the generic places layer |
 | `src/config/map.ts` bbox / center | `CHICAGO_BBOX`, `CHICAGO_CENTER` in `@wm/shared` | Import instead of redefining |
 | `LayerKey`, feature property types | zod schemas in `@wm/shared/layers` | `z.infer` replaces hand-written types |
+| Search: street addresses (never worked — local index only) | `GET /v1/geocode?q=` (Photon, Chicago bbox) | `SearchBar` merges `GeocodeHit`s under local results; debounce 250 ms, min 2 chars |
 | — | `POST /v1/auth/native` | Add Sign in with Apple / Google (native), send identity token, store the JWT pair |
 | — | `POST /v1/places`, `/vouch` | Submit and vouch screens |
 
