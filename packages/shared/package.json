@@ -13,6 +13,6 @@
     "lint": "eslint src",
     "test": "vitest run"
   },
-  "dependencies": { "zod": "^3.24.3" },
+  "dependencies": { "zod": "^4.6.6" },
   "devDependencies": { "@wm/config": "workspace:*", "eslint": "^9.25.0", "typescript": "^5.8.3", "vitest": "^3.1.2" }
 }
